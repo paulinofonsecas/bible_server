@@ -1,3 +1,5 @@
+publish_to: none
+
 name: bible_server
 description: A server app using the shelf package and Docker.
 version: 1.0.0
@@ -8,7 +10,7 @@ environment:
 
 dependencies:
   bible_handler:
-    path: ../ACF/135c3fbc-0a74-48ae-9615-7385fa389ceb/bible_handler
+    path: ../bible_handler
   shelf: ^1.4.0
   shelf_router: ^1.1.0
 

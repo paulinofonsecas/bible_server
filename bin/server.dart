@@ -95,10 +95,10 @@ Response _getChapterHandler(Request request) {
   }
 }
 
-
 Future<void> main(List<String> args) async {
   // The root directory where Bible versions are stored.
-  final biblesRootPath = 'C:\\Users\\PC\\Desktop\\bible_service\\bibles\\versoes_xml';
+  final biblesRootPath =
+      'C:\\Users\\PC\\Desktop\\bible_service\\bibles\\versoes_xml';
   final rootDir = Directory(biblesRootPath);
 
   print('Scanning for Bible versions in $biblesRootPath...');
@@ -110,22 +110,20 @@ Future<void> main(List<String> args) async {
 
   await for (final versionDir in rootDir.list()) {
     if (versionDir is Directory) {
-      await for (final potentialBibleDir in (versionDir as Directory).list()) {
-        if (potentialBibleDir is Directory) {
-          final metadataFile = File('${potentialBibleDir.path}\\metadata.xml');
-          if (await metadataFile.exists()) {
-            final versionId = versionDir.path.split(Platform.pathSeparator).last;
-            print('Metadata file found for $versionId. Loading version from ${potentialBibleDir.path}...');
-            try {
-              final bible = await loadBibleFromDirectory(potentialBibleDir.path);
-              bibleCache[versionId] = bible;
-              print('Successfully loaded version: $versionId');
-            } catch (e) {
-              print('Failed to load version $versionId: $e');
-            }
-            // Found the bible in this version directory, no need to check other subdirectories.
-            break; 
-          }
+      print('Checking directory: ${versionDir.path}');
+      final metadataFile = File('${versionDir.path}\\metadata.xml');
+
+      if (await metadataFile.exists()) {
+        final versionId = versionDir.path.split(Platform.pathSeparator).last;
+        print(
+          'Metadata file found for $versionId. Loading version from ${versionDir.path}...',
+        );
+        try {
+          final bible = await loadBibleFromDirectory(versionDir.path);
+          bibleCache[versionId] = bible;
+          print('Successfully loaded version: $versionId');
+        } catch (e) {
+          print('Failed to load version $versionId: $e');
         }
       }
     }
@@ -134,7 +132,9 @@ Future<void> main(List<String> args) async {
   if (bibleCache.isEmpty) {
     print('Warning: No Bible versions were found or loaded.');
   } else {
-    print('Loaded ${bibleCache.length} Bible version(s): ${bibleCache.keys.join(', ')}');
+    print(
+      'Loaded ${bibleCache.length} Bible version(s): ${bibleCache.keys.join(', ')}',
+    );
   }
 
   // Use any available host or container IP (usually `0.0.0.0`).
