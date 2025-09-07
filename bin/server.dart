@@ -11,9 +11,32 @@ final Map<String, Bible> bibleCache = {};
 // The router for our API.
 final _router = Router()
   ..get('/versions', _getVersionsHandler)
+  ..get('/versions/<versionId>/search', _searchHandler)
   ..get('/versions/<versionId>', _getVersionHandler)
   ..get('/versions/<versionId>/<bookId>', _getBookHandler)
   ..get('/versions/<versionId>/<bookId>/<chapter>', _getChapterHandler);
+
+// Handler for GET /versions/<versionId>/search
+// Searches for a query within a specific Bible version.
+Response _searchHandler(Request request) {
+  final versionId = request.params['versionId'];
+  final query = request.url.queryParameters['q'];
+  final bible = bibleCache[versionId];
+
+  if (bible == null) {
+    return Response.notFound('Version not found.');
+  }
+
+  if (query == null || query.isEmpty) {
+    return Response.badRequest(body: 'Search query (q) is required.');
+  }
+
+  final searchResults = bible.search(query);
+  return Response.ok(
+    searchResults.toJson(),
+    headers: {'Content-Type': 'application/json'},
+  );
+}
 
 // Handler for GET /versions
 // Returns a list of available version IDs.
@@ -96,36 +119,20 @@ Response _getChapterHandler(Request request) {
 }
 
 Future<void> main(List<String> args) async {
-  // The root directory where Bible versions are stored.
-  final biblesRootPath =
-      'C:\\Users\\PC\\Desktop\\bible_service\\bibles\\versoes_xml';
-  final rootDir = Directory(biblesRootPath);
+  final List<String> versionsToLoad = [
+    'ACF', 'ARA', 'ARC', 'AS21', 'JFAA', 'KJA', 'KJF', 'NAA', 'NBV', 'NTLH', 'NVI', 'NVT', 'TB'
+  ];
 
-  print('Scanning for Bible versions in $biblesRootPath...');
+  print('Loading Bible versions from GitHub...');
 
-  if (!await rootDir.exists()) {
-    print('Error: Root directory not found: $biblesRootPath');
-    return;
-  }
-
-  await for (final versionDir in rootDir.list()) {
-    if (versionDir is Directory) {
-      print('Checking directory: ${versionDir.path}');
-      final metadataFile = File('${versionDir.path}\\metadata.xml');
-
-      if (await metadataFile.exists()) {
-        final versionId = versionDir.path.split(Platform.pathSeparator).last;
-        print(
-          'Metadata file found for $versionId. Loading version from ${versionDir.path}...',
-        );
-        try {
-          final bible = await loadBibleFromDirectory(versionDir.path);
-          bibleCache[versionId] = bible;
-          print('Successfully loaded version: $versionId');
-        } catch (e) {
-          print('Failed to load version $versionId: $e');
-        }
-      }
+  for (final versionId in versionsToLoad) {
+    print('Attempting to load version: $versionId');
+    try {
+      final bible = await loadBibleFromUrl(versionId);
+      bibleCache[versionId] = bible;
+      print('Successfully loaded version: $versionId');
+    } catch (e) {
+      print('Failed to load version $versionId: $e');
     }
   }
 
