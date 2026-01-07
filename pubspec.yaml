@@ -9,6 +9,7 @@ environment:
   sdk: ^3.8.1
 
 dependencies:
+  archive: ^3.6.1
   bible_handler:
     path: ../bible_handler
   shelf: ^1.4.0

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:archive/archive.dart';
 import 'package:bible_handler/bible_handler.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart';
@@ -12,10 +13,42 @@ final Map<String, Bible> bibleCache = {};
 // The router for our API.
 final _router = Router()
   ..get('/versions', _getVersionsHandler)
+  ..get('/versions/<versionId>/download', _downloadVersionZipHandler)
   ..get('/versions/<versionId>/search', _searchHandler)
   ..get('/versions/<versionId>', _getVersionHandler)
   ..get('/versions/<versionId>/<bookId>', _getBookHandler)
   ..get('/versions/<versionId>/<bookId>/<chapter>', _getChapterHandler);
+
+// Handler for GET /versions/<versionId>/download
+// Creates a ZIP file containing the specified Bible version as JSON and returns it.
+Response _downloadVersionZipHandler(Request request) {
+  final versionId = request.params['versionId'];
+  final bible = bibleCache[versionId];
+
+  if (bible == null) {
+    return Response.notFound('Version not found.');
+  }
+
+  final archive = Archive();
+  final jsonContent = jsonEncode(bible.toJson());
+  final bytes = utf8.encode(jsonContent);
+  archive.addFile(ArchiveFile('$versionId.json', bytes.length, bytes));
+
+  final zipEncoder = ZipEncoder();
+  final zipData = zipEncoder.encode(archive);
+
+  if (zipData == null) {
+    return Response.internalServerError(body: 'Failed to create ZIP file.');
+  }
+
+  return Response.ok(
+    zipData,
+    headers: {
+      'Content-Type': 'application/zip',
+      'Content-Disposition': 'attachment; filename="$versionId.zip"',
+    },
+  );
+}
 
 // Handler for GET /versions/<versionId>/search
 // Searches for a query within a specific Bible version.
@@ -173,5 +206,5 @@ Future<void> main(List<String> args) async {
   final port = int.parse(Platform.environment['PORT'] ?? '8081');
   final server = await serve(handler, InternetAddress.anyIPv4, port);
   print('Server listening on port ${server.port}');
-  print('Access the API at http://$externalIp:${server.port}');
+  print('Access the API at http://$externalIp:${server.port}/versions');
 }
