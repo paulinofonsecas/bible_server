@@ -146,9 +146,6 @@ Future<void> main(List<String> args) async {
     );
   }
 
-  // Use any available host or container IP (usually `0.0.0.0`).
-  final ip = InternetAddress.anyIPv4;
-
   // Configure a pipeline that logs requests.
   final handler =
       Pipeline().addMiddleware(logRequests()).addHandler(_router.call);
@@ -162,7 +159,7 @@ Future<void> main(List<String> args) async {
   client.close();
   print('External IP: $externalIp');
   final port = int.parse(Platform.environment['PORT'] ?? '8081');
-  final server = await serve(handler, ip, port);
+  final server = await serve(handler, InternetAddress('0.0.0.0'), port);
   print('Server listening on port ${server.port}');
   print('Access the API at http://18.218.114.28:${server.port}');
 }
