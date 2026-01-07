@@ -1,9 +1,10 @@
-import 'dart:io';
 import 'dart:convert';
+import 'dart:io';
+
+import 'package:bible_handler/bible_handler.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart';
 import 'package:shelf_router/shelf_router.dart';
-import 'package:bible_handler/bible_handler.dart';
 
 // A map to cache the loaded Bible versions in memory.
 final Map<String, Bible> bibleCache = {};
@@ -120,7 +121,19 @@ Response _getChapterHandler(Request request) {
 
 Future<void> main(List<String> args) async {
   final List<String> versionsToLoad = [
-    'ACF', 'ARA', 'ARC', 'AS21', 'JFAA', 'KJA', 'KJF', 'NAA', 'NBV', 'NTLH', 'NVI', 'NVT', 'TB'
+    'ACF',
+    'ARA',
+    'ARC',
+    'AS21',
+    'JFAA',
+    'KJA',
+    'KJF',
+    'NAA',
+    'NBV',
+    'NTLH',
+    'NVI',
+    'NVT',
+    'TB'
   ];
 
   print('Loading Bible versions from GitHub...');
@@ -148,13 +161,19 @@ Future<void> main(List<String> args) async {
   final ip = InternetAddress.anyIPv4;
 
   // Configure a pipeline that logs requests.
-  final handler = Pipeline()
-      .addMiddleware(logRequests())
-      .addHandler(_router.call);
+  final handler =
+      Pipeline().addMiddleware(logRequests()).addHandler(_router.call);
 
-  // For running in containers, we respect the PORT environment variable.
+  final client = HttpClient();
+  final externalIp = await client
+      .getUrl(Uri.parse('https://api.ipify.org'))
+      .then((req) => req.close())
+      .then((res) => res.transform(utf8.decoder).join())
+      .catchError((_) => 'Unavailable');
+  client.close();
+  print('External IP: $externalIp');
   final port = int.parse(Platform.environment['PORT'] ?? '8081');
   final server = await serve(handler, ip, port);
   print('Server listening on port ${server.port}');
-  print('Access the API at http://localhost:${server.port}');
+  print('Access the API at http://$externalIp:${server.port}');
 }
