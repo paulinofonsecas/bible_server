@@ -122,18 +122,7 @@ Response _getChapterHandler(Request request) {
 Future<void> main(List<String> args) async {
   final List<String> versionsToLoad = [
     'ACF',
-    'ARA',
-    'ARC',
-    'AS21',
-    'JFAA',
-    'KJA',
-    'KJF',
-    'NAA',
-    'NBV',
-    'NTLH',
-    'NVI',
-    'NVT',
-    'TB'
+
   ];
 
   print('Loading Bible versions from GitHub...');
@@ -175,5 +164,5 @@ Future<void> main(List<String> args) async {
   final port = int.parse(Platform.environment['PORT'] ?? '8081');
   final server = await serve(handler, ip, port);
   print('Server listening on port ${server.port}');
-  print('Access the API at http://$externalIp:${server.port}');
+  print('Access the API at http://18.218.114.28:${server.port}');
 }
