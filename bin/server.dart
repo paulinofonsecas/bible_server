@@ -154,18 +154,18 @@ Response _getChapterHandler(Request request) {
 Future<void> main(List<String> args) async {
   final List<String> versionsToLoad = [
     'ACF',
-    // 'ARA',
-    // 'ARC',
-    // 'AS21',
-    // 'JFAA',
-    // 'KJA',
-    // 'KJF',
-    // 'NAA',
-    // 'NBV',
-    // 'NTLH',
-    // 'NVI',
-    // 'NVT',
-    // 'TB',
+    'ARA',
+    'ARC',
+    'AS21',
+    'JFAA',
+    'KJA',
+    'KJF',
+    'NAA',
+    'NBV',
+    'NTLH',
+    'NVI',
+    'NVT',
+    'TB',
   ];
 
   print('Loading Bible versions from GitHub...');
