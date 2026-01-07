@@ -10,6 +10,20 @@ import 'package:shelf_router/shelf_router.dart';
 // A map to cache the loaded Bible versions in memory.
 final Map<String, Bible> bibleCache = {};
 
+// A JSON encoder that produces pretty-printed output.
+const _jsonEncoder = JsonEncoder.withIndent('  ');
+
+/// Returns a JSON response with the given [data].
+Response _jsonResponse(Object? data) {
+  return Response.ok(
+    _jsonEncoder.convert(data),
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Access-Control-Allow-Origin': '*', // Added for standard API access
+    },
+  );
+}
+
 // The router for our API.
 final _router = Router()
   ..get('/versions', _getVersionsHandler)
@@ -30,9 +44,9 @@ Response _downloadVersionZipHandler(Request request) {
   }
 
   final archive = Archive();
-  final jsonContent = jsonEncode(bible.toJson());
+  final jsonContent = bible.toJson();
   final bytes = utf8.encode(jsonContent);
-  archive.addFile(ArchiveFile('$versionId.json', bytes.length, bytes));
+  archive.addFile(ArchiveFile('$versionId.json', bytes.length, jsonContent));
 
   final zipEncoder = ZipEncoder();
   final zipData = zipEncoder.encode(archive);
@@ -66,19 +80,13 @@ Response _searchHandler(Request request) {
   }
 
   final searchResults = bible.search(query);
-  return Response.ok(
-    searchResults.toJson(),
-    headers: {'Content-Type': 'application/json'},
-  );
+  return _jsonResponse(searchResults.toJson());
 }
 
 // Handler for GET /versions
 // Returns a list of available version IDs.
 Response _getVersionsHandler(Request req) {
-  return Response.ok(
-    jsonEncode(bibleCache.keys.toList()),
-    headers: {'Content-Type': 'application/json'},
-  );
+  return _jsonResponse(bibleCache.keys.toList());
 }
 
 // Handler for GET /versions/<versionId>
@@ -92,14 +100,11 @@ Response _getVersionHandler(Request request) {
   }
 
   // Return the Bible object without the book content for a summary.
-  return Response.ok(
-    jsonEncode({
-      'name': bible.name,
-      'abbreviation': bible.abbreviation,
-      'books': bible.books.map((b) => {'id': b.id, 'name': b.name}).toList(),
-    }),
-    headers: {'Content-Type': 'application/json'},
-  );
+  return _jsonResponse({
+    'name': bible.name,
+    'abbreviation': bible.abbreviation,
+    'books': bible.books.map((b) => {'id': b.id, 'name': b.name}).toList(),
+  });
 }
 
 // Handler for GET /versions/<versionId>/<bookId>
@@ -115,10 +120,7 @@ Response _getBookHandler(Request request) {
 
   try {
     final book = bible.books.firstWhere((b) => b.id == bookId);
-    return Response.ok(
-      jsonEncode(book.toJson()),
-      headers: {'Content-Type': 'application/json'},
-    );
+    return _jsonResponse(book.toJson());
   } on StateError {
     return Response.notFound('Book not found.');
   }
@@ -143,10 +145,7 @@ Response _getChapterHandler(Request request) {
   try {
     final book = bible.books.firstWhere((b) => b.id == bookId);
     final chapter = book.chapters.firstWhere((c) => c.number == chapterNum);
-    return Response.ok(
-      jsonEncode(chapter.toJson()),
-      headers: {'Content-Type': 'application/json'},
-    );
+    return _jsonResponse(chapter.toJson());
   } on StateError {
     return Response.notFound('Book or Chapter not found.');
   }
@@ -155,18 +154,18 @@ Response _getChapterHandler(Request request) {
 Future<void> main(List<String> args) async {
   final List<String> versionsToLoad = [
     'ACF',
-    'ARA',
-    'ARC',
-    'AS21',
-    'JFAA',
-    'KJA',
-    'KJF',
-    'NAA',
-    'NBV',
-    'NTLH',
-    'NVI',
-    'NVT',
-    'TB',
+    // 'ARA',
+    // 'ARC',
+    // 'AS21',
+    // 'JFAA',
+    // 'KJA',
+    // 'KJF',
+    // 'NAA',
+    // 'NBV',
+    // 'NTLH',
+    // 'NVI',
+    // 'NVT',
+    // 'TB',
   ];
 
   print('Loading Bible versions from GitHub...');
