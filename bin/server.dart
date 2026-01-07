@@ -122,7 +122,18 @@ Response _getChapterHandler(Request request) {
 Future<void> main(List<String> args) async {
   final List<String> versionsToLoad = [
     'ACF',
-
+    'ARA',
+    'ARC',
+    'AS21',
+    'JFAA',
+    'KJA',
+    'KJF',
+    'NAA',
+    'NBV',
+    'NTLH',
+    'NVI',
+    'NVT',
+    'TB',
   ];
 
   print('Loading Bible versions from GitHub...');
@@ -147,8 +158,9 @@ Future<void> main(List<String> args) async {
   }
 
   // Configure a pipeline that logs requests.
-  final handler =
-      Pipeline().addMiddleware(logRequests()).addHandler(_router.call);
+  final handler = Pipeline()
+      .addMiddleware(logRequests())
+      .addHandler(_router.call);
 
   final client = HttpClient();
   final externalIp = await client
@@ -159,7 +171,7 @@ Future<void> main(List<String> args) async {
   client.close();
   print('External IP: $externalIp');
   final port = int.parse(Platform.environment['PORT'] ?? '8081');
-  final server = await serve(handler, InternetAddress('0.0.0.0'), port);
+  final server = await serve(handler, InternetAddress.anyIPv4, port);
   print('Server listening on port ${server.port}');
-  print('Access the API at http://18.218.114.28:${server.port}');
+  print('Access the API at http://$externalIp:${server.port}');
 }
